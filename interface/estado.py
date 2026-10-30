@@ -15,7 +15,7 @@ import streamlit as st
 from agente import Agente, criar_modelo
 from agente.ferramentas import CATALOGO
 from agente.historico import Historico
-from agente.nucleo import PROVEDORES
+from agente.nucleo import MODELOS
 
 # ASSIS_BANCO permite usar outro arquivo (ex.: em testes).
 CAMINHO_BANCO = Path(os.getenv("ASSIS_BANCO")
@@ -25,12 +25,10 @@ CAMINHO_BANCO = Path(os.getenv("ASSIS_BANCO")
 PAGINAS: dict = {}
 
 PADROES = {
-    "provedor": next(iter(PROVEDORES)),
-    "modelo": PROVEDORES[next(iter(PROVEDORES))]["modelos"][0],
+    "modelo": MODELOS[0],
     "modelo_personalizado": "",
     "temperatura": 0.3,
     "raciocinio": "medium",
-    "api_key": "",
     "usar_ferramentas": True,
     "ferramentas": list(CATALOGO),
 }
@@ -97,10 +95,6 @@ def modelo_efetivo() -> str:
     return cfg()["modelo_personalizado"].strip() or cfg()["modelo"]
 
 
-def provedor_id() -> str:
-    return PROVEDORES[cfg()["provedor"]]["id"]
-
-
 def chave_no_env() -> bool:
     return bool(os.getenv("GROQ_API_KEY"))
 
@@ -113,16 +107,15 @@ def ferramentas_ativas() -> list[str]:
 
 def _assinatura() -> tuple:
     c = cfg()
-    return (provedor_id(), modelo_efetivo(), c["temperatura"], c["raciocinio"],
-            c["api_key"], tuple(ferramentas_ativas()))
+    return (modelo_efetivo(), c["temperatura"], c["raciocinio"],
+            tuple(ferramentas_ativas()))
 
 
 def obter_agente() -> Agente:
     """Recria o agente quando a configuração muda, mantendo a conversa."""
     assinatura = _assinatura()
     if st.session_state.get("assinatura") != assinatura or "agente" not in st.session_state:
-        llm = criar_modelo(provedor_id(), modelo_efetivo(), cfg()["temperatura"],
-                           cfg()["api_key"] or None, cfg()["raciocinio"])
+        llm = criar_modelo(modelo_efetivo(), cfg()["temperatura"], cfg()["raciocinio"])
         agente = Agente(
             llm,
             ferramentas=[CATALOGO[n].ferramenta for n in ferramentas_ativas()],

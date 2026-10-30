@@ -38,7 +38,7 @@ def pagina() -> None:
     st.subheader("Tecnologias")
     st.markdown(
         "- **LangChain + LangGraph**: orquestração do agente e memória (SqliteSaver)\n"
-        "- **Groq** (nuvem) ou **Ollama** (local): modelos de pesos abertos\n"
+        "- **Groq**: API gratuita na nuvem com modelos de pesos abertos\n"
         "- **DuckDuckGo** com filtro de domínios: busca em fontes confiáveis\n"
         "- **OpenAlex**: artigos científicos · **Wikipédia** · **Open-Meteo**: clima\n"
         "- **Streamlit**: esta interface"

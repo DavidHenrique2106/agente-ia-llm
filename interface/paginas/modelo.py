@@ -3,19 +3,8 @@
 import streamlit as st
 
 from agente import criar_modelo
-from agente.nucleo import NIVEIS_RACIOCINIO, PROVEDORES
+from agente.nucleo import MODELOS, NIVEIS_RACIOCINIO
 from interface import estado
-
-DESCRICAO_PROVEDOR = {
-    "groq": "Roda na nuvem da Groq, de graça e muito rápido. Precisa de uma chave de API.",
-    "ollama": "Roda no seu computador, sem internet. Precisa do Ollama instalado "
-              "(https://ollama.com) e do modelo baixado com `ollama pull`.",
-}
-
-
-def _trocou_provedor() -> None:
-    # O modelo escolhido antes pode não existir no novo provedor.
-    estado.cfg()["modelo"] = PROVEDORES[estado.cfg()["provedor"]]["modelos"][0]
 
 
 def pagina() -> None:
@@ -24,17 +13,16 @@ def pagina() -> None:
     st.caption("Escolha qual modelo de linguagem responde às suas perguntas. "
                "Mudar algo aqui não apaga a conversa.")
 
-    with st.container(border=True):
-        st.markdown("##### Onde o modelo roda")
-        st.radio("Provedor", list(PROVEDORES), horizontal=True,
-                 label_visibility="collapsed", **estado.vincular("provedor", _trocou_provedor))
-        st.caption(DESCRICAO_PROVEDOR[estado.provedor_id()])
+    if not estado.chave_no_env():
+        st.error("A chave da Groq não está configurada. Coloque `GROQ_API_KEY=...` no "
+                 "arquivo `.env` (ou nos Secrets do Streamlit Cloud) e reinicie o app.",
+                 icon=":material/key_off:")
 
     with st.container(border=True):
         st.markdown("##### Modelo")
-        st.selectbox("Modelo de pesos abertos",
-                     PROVEDORES[cfg["provedor"]]["modelos"], **estado.vincular("modelo"))
-        st.text_input("Outro modelo (opcional)", placeholder="ex.: openai/gpt-oss-20b",
+        st.caption("Modelos de pesos abertos rodando na nuvem da Groq: gratuito e rápido.")
+        st.selectbox("Modelo de pesos abertos", MODELOS, **estado.vincular("modelo"))
+        st.text_input("Outro modelo da Groq (opcional)", placeholder="ex.: openai/gpt-oss-20b",
                       help="Se preencher, este nome substitui o modelo da lista acima.",
                       **estado.vincular("modelo_personalizado"))
 
@@ -56,23 +44,10 @@ def pagina() -> None:
                    "**Profundo** responde melhor perguntas difíceis, mas demora mais e "
                    "gasta mais da cota gratuita. Vale para os modelos gpt-oss.")
 
-    if estado.provedor_id() == "groq":
-        with st.container(border=True):
-            st.markdown("##### Chave da API Groq")
-            if estado.chave_no_env():
-                st.success("Chave carregada do arquivo `.env`.", icon=":material/key:")
-            else:
-                st.text_input("Chave", type="password", placeholder="gsk_…",
-                              help="Crie grátis em https://console.groq.com/keys",
-                              **estado.vincular("api_key"))
-                st.caption("Dica: coloque a chave no arquivo `.env` para não precisar "
-                           "digitá-la toda vez.")
-
     if st.button("Testar conexão", icon=":material/wifi_tethering:"):
         with st.spinner(f"Conversando com {estado.modelo_efetivo()}…"):
             try:
-                llm = criar_modelo(estado.provedor_id(), estado.modelo_efetivo(),
-                                   cfg["temperatura"], cfg["api_key"] or None,
+                llm = criar_modelo(estado.modelo_efetivo(), cfg["temperatura"],
                                    cfg["raciocinio"])
                 llm.invoke("Responda apenas: ok")
             except Exception as erro:  # noqa: BLE001

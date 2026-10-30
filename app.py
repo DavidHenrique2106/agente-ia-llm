@@ -4,7 +4,7 @@ Execute com:  streamlit run app.py
 
 Este arquivo só monta a navegação. Cada tela fica em interface/paginas/:
   chat.py        conversa com o agente
-  modelo.py      provedor, modelo, temperatura e chave da API
+  modelo.py      modelo, temperatura e raciocínio
   ferramentas.py ferramentas e fontes de pesquisa
   sobre.py       como o agente funciona
 A barra lateral com o histórico de conversas fica em interface/barra_lateral.py.

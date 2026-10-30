@@ -74,56 +74,42 @@ def montar_prompt(ferramentas: list[BaseTool]) -> str:
     return prompt
 
 
-PROVEDORES = {
-    "Groq (nuvem, gratuito)": {
-        "id": "groq",
-        "modelos": [
-            "openai/gpt-oss-120b",
-            "openai/gpt-oss-20b",
-            "qwen/qwen3.8-27b",
-        ],
-    },
-    "Ollama (local)": {
-        "id": "ollama",
-        "modelos": ["llama3.2", "qwen2.5:7b", "llama3.1:8b", "mistral"],
-    },
-}
+# Modelos de pesos abertos servidos pela Groq (nuvem, gratuito).
+MODELOS = [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.8-27b",
+]
 
 
 NIVEIS_RACIOCINIO = {"low": "Rápido", "medium": "Equilibrado", "high": "Profundo"}
 
 
-def criar_modelo(provedor: str, modelo: str, temperatura: float = 0.3,
-                 api_key: str | None = None, raciocinio: str = "medium") -> BaseChatModel:
-    """Cria o LLM. Ambos os provedores servem modelos de pesos abertos.
+def criar_modelo(modelo: str = MODELOS[0], temperatura: float = 0.3,
+                 raciocinio: str = "medium") -> BaseChatModel:
+    """Cria o LLM na Groq. A chave vem da variável GROQ_API_KEY (arquivo .env
+    localmente, ou Secrets no Streamlit Cloud).
 
     raciocinio ("low", "medium" ou "high") define quanto o modelo pensa antes
     de responder. Vale para os modelos gpt-oss, que devolvem o raciocínio
     separado da resposta para ser exibido na tela.
     """
-    if provedor == "groq":
-        from langchain_groq import ChatGroq
+    from langchain_groq import ChatGroq
 
-        chave = api_key or os.getenv("GROQ_API_KEY")
-        if not chave:
-            raise ValueError(
-                "Chave da Groq não encontrada. Crie uma grátis em "
-                "https://console.groq.com/keys e coloque no arquivo .env "
-                "(GROQ_API_KEY=...) ou na tela Configurações › Modelo."
-            )
-        extras = {}
-        if "gpt-oss" in modelo:
-            extras = {"reasoning_format": "parsed", "reasoning_effort": raciocinio}
-        elif "qwen3" in modelo:
-            extras = {"reasoning_format": "parsed"}
-        return ChatGroq(model=modelo, temperature=temperatura, api_key=chave,
-                        max_retries=2, timeout=60, **extras)
-    if provedor == "ollama":
-        from langchain_ollama import ChatOllama
-
-        return ChatOllama(model=modelo, temperature=temperatura,
-                          base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
-    raise ValueError(f"Provedor desconhecido: {provedor}")
+    chave = os.getenv("GROQ_API_KEY")
+    if not chave:
+        raise ValueError(
+            "Chave da Groq não configurada. Coloque GROQ_API_KEY=... no arquivo "
+            ".env (ou nos Secrets do Streamlit Cloud). Crie uma grátis em "
+            "https://console.groq.com/keys."
+        )
+    extras = {}
+    if "gpt-oss" in modelo:
+        extras = {"reasoning_format": "parsed", "reasoning_effort": raciocinio}
+    elif "qwen3" in modelo:
+        extras = {"reasoning_format": "parsed"}
+    return ChatGroq(model=modelo, temperature=temperatura, api_key=chave,
+                    max_retries=2, timeout=60, **extras)
 
 
 @dataclass

@@ -1,7 +1,7 @@
 """Versão de terminal do agente (alternativa à interface web).
 
-Execute com:  python cli.py            (Groq, modelo padrão)
-              python cli.py --provedor ollama --modelo llama3.2
+Execute com:  python cli.py                       (modelo padrão)
+              python cli.py --modelo openai/gpt-oss-20b
 """
 
 import argparse
@@ -9,18 +9,18 @@ import argparse
 from dotenv import load_dotenv
 
 from agente import Agente, criar_modelo
+from agente.nucleo import MODELOS
 
 
 def main() -> None:
     load_dotenv()
     parser = argparse.ArgumentParser(description="Converse com o agente Assis.")
-    parser.add_argument("--provedor", choices=["groq", "ollama"], default="groq")
-    parser.add_argument("--modelo", default=None)
+    parser.add_argument("--modelo", default=MODELOS[0])
     parser.add_argument("--sem-ferramentas", action="store_true")
     args = parser.parse_args()
 
-    modelo = args.modelo or ("openai/gpt-oss-120b" if args.provedor == "groq" else "llama3.2")
-    agente = Agente(criar_modelo(args.provedor, modelo),
+    modelo = args.modelo
+    agente = Agente(criar_modelo(modelo),
                     ferramentas=[] if args.sem_ferramentas else None)
 
     print(f"🤖 Assis ({modelo}). Comandos: /nova = nova conversa, /sair = encerrar.\n")

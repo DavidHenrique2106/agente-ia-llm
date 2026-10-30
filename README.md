@@ -10,7 +10,7 @@ abertos**, com **interface web de chat**, **memória da conversa** e
 | Perguntas em linguagem natural respondidas por um LLM | Modelos abertos (GPT-OSS, Qwen, etc.) via **LangChain** |
 | Interface simples | Chat web em **Streamlit** (`app.py`) e versão de terminal (`cli.py`) |
 | Manter o contexto da conversa | Memória com *checkpointer* do **LangGraph** + resumo automático de conversas longas |
-| Modelos abertos, inclusive remotos via API | **Groq** (API gratuita na nuvem) ou **Ollama** (rodando localmente) |
+| Modelos abertos, inclusive remotos via API | **Groq** (API gratuita na nuvem, com modelos de pesos abertos) |
 
 ## ✨ Funcionalidades
 
@@ -38,8 +38,8 @@ abertos**, com **interface web de chat**, **memória da conversa** e
 - 📑 Respostas com pesquisa terminam com uma seção **Fontes** com os links usados.
   As pesquisas seguem a ordem de confiabilidade: fontes confiáveis > artigos > Wikipédia.
 - 🔍 A interface mostra **quais ferramentas o agente usou**, com entrada e resultado.
-- ⚙️ Configurações em telas separadas (menu no topo): **Modelo** (provedor,
-  modelo, temperatura, chave, teste de conexão) e **Ferramentas e fontes**
+- ⚙️ Configurações em telas separadas (menu no topo): **Modelo** (modelo,
+  temperatura, raciocínio, teste de conexão) e **Ferramentas e fontes**
   (liga/desliga cada uma). Trocar o modelo não apaga a conversa.
 
 ## 🏗️ Arquitetura
@@ -49,7 +49,7 @@ flowchart LR
     U[👤 Usuário] -->|pergunta| UI[Interface Streamlit]
     UI --> A[Agente LangChain<br/>create_agent]
     A <-->|histórico| M[(Memória<br/>SQLite)]
-    A <-->|mensagens| LLM[LLM aberto<br/>Groq / Ollama]
+    A <-->|mensagens| LLM[LLM aberto<br/>Groq]
     LLM -.->|decide chamar| T{Ferramentas}
     T --> T1[🧮 Calculadora]
     T --> T2[🕒 Data/Hora]
@@ -115,14 +115,6 @@ streamlit run app.py
 
 Versão de terminal: `python cli.py`
 
-### Opção 100% local (sem internet para o LLM), com Ollama
-
-```bash
-# instale em https://ollama.com e depois:
-ollama pull llama3.2
-streamlit run app.py               # em Configurações › Modelo, escolha "Ollama (local)"
-```
-
 ### Publicar na internet (Streamlit Community Cloud)
 
 > A Vercel não serve para este projeto: o Streamlit precisa de um servidor sempre
@@ -170,6 +162,5 @@ nova conversa, o uso de ferramentas e a calculadora segura.
 
 - [LangChain](https://python.langchain.com/) e [LangGraph](https://langchain-ai.github.io/langgraph/): orquestração do agente e memória
 - [Groq](https://groq.com/): API gratuita e rápida para modelos abertos
-- [Ollama](https://ollama.com/): execução local de modelos abertos
 - [Streamlit](https://streamlit.io/): interface web
 - [DuckDuckGo](https://pypi.org/project/ddgs/) (com filtro de domínios), [OpenAlex](https://openalex.org/), [Wikipédia API](https://www.mediawiki.org/wiki/API) e [Open-Meteo](https://open-meteo.com/): dados das ferramentas
